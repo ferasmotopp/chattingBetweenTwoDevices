@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Simple Chatting</title>
+    <style>
+      body {
+        font-family: Arial;
+        background: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+      }
+      #chat-box {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 10px;
+        height: 300px;
+        overflow-y: scroll;
+        margin-bottom: 10px;
+      }
+      .message {
+        margin: 5px 0;
+      }
+      .sender {
+        color: blue;
+      }
+      .receiver {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Chatting Interface</h2>
+
+    <div>
+      <label>Sender IP:<input type="number" id="sender_id" /></label>
+      <label>Receiver IP:<input type="number" id="receiver_id" /></label>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <input type="text" id="message_input" placeholder="Type Your Message ..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+      async function fetchMessages() {
+        const senderId = document.getElementById("sender_id").value;
+        const receiverId = document.getElementById("receiver_id").value;
+
+        if (!senderId || !receiverId) return;
+
+        const res = await fetch(`/messages/${senderId}/${receiverId}`);
+        const messages = await res.json();
+
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = "";
+
+        messages.forEach((msg) => {
+          const div = document.createElement("div");
+          div.className = "message";
+          div.innerHTML = `<strong class="${
+            msg.sender_id == senderId ? "sender" : "receiver"
+          }">[${msg.sender_id}]</strong>: ${msg.content}`;
+          chatBox.appendChild(div);
+        });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      async function sendMessage() {
+        const senderId = document.getElementById("sender_id").value;
+        const receiverId = document.getElementById("receiver_id").value;
+        const content = document.getElementById("message_input").value;
+
+        if (!content || !senderId || !receiverId) return;
+
+        await fetch("/messages/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content,
+            sender_id: parseInt(senderId),
+            receiver_id: parseInt(receiverId)
+          })
+        });
+
+        document.getElementById("message_input").value = "";
+        fetchMessages();
+      }
+
+      setInterval(fetchMessages, 2000);
+    </script>
+  </body>
+</html>
